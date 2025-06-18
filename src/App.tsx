@@ -7,7 +7,7 @@ import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
 import DashboardPage from '@/pages/DashboardPage';
 
-// Layout
+
 import Layout from '@/components/layout/Layout';
 
 
