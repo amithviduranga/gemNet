@@ -7,14 +7,18 @@ import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
 import DashboardPage from '@/pages/DashboardPage';
 
+// Customer Pages
+import CustomerLoginPage from '@/pages/customer/CustomerLoginPage';
+import CustomerRegisterPage from '@/pages/customer/CustomerRegisterPage';
+import CustomerDashboardPage from '@/pages/customer/CustomerDashboardPage';
 
 import Layout from '@/components/layout/Layout';
 
+import { useAuth, useCustomerAuth } from '@/hooks';
+import { UserRole } from '@/types';
 
-import { useAuth } from '@/hooks';
-
-// Protected Route Component
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Protected Route Component for Sellers
+const SellerProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
@@ -32,8 +36,27 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
-// Public Route Component (redirect if authenticated)
-const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Protected Route Component for Customers
+const CustomerProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, loading } = useCustomerAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/customer/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// Public Route Component for Sellers (redirect if authenticated)
+const SellerPublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
@@ -51,43 +74,84 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <>{children}</>;
 };
 
+// Public Route Component for Customers (redirect if authenticated)
+const CustomerPublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, loading } = useCustomerAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/customer/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const App: React.FC = () => {
   return (
     <Router>
       <div className="min-h-screen bg-secondary-50">
         <Routes>
-          {/* Public Routes */}
+          {/* Seller Routes */}
           <Route
             path="/login"
             element={
-              <PublicRoute>
+              <SellerPublicRoute>
                 <LoginPage />
-              </PublicRoute>
+              </SellerPublicRoute>
             }
           />
           <Route
             path="/register/*"
             element={
-              <PublicRoute>
+              <SellerPublicRoute>
                 <RegisterPage />
-              </PublicRoute>
+              </SellerPublicRoute>
             }
           />
-
-          {/* Protected Routes */}
           <Route
-            path="/dashboard"
+            path="/dashboard/*"
             element={
-              <ProtectedRoute>
-                <Layout>
-                  <DashboardPage />
-                </Layout>
-              </ProtectedRoute>
+              <SellerProtectedRoute>
+                <DashboardPage />
+              </SellerProtectedRoute>
             }
           />
 
-          {/* Default Route */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          {/* Customer Routes */}
+          <Route
+            path="/customer/login"
+            element={
+              <CustomerPublicRoute>
+                <CustomerLoginPage />
+              </CustomerPublicRoute>
+            }
+          />
+          <Route
+            path="/customer/register"
+            element={
+              <CustomerPublicRoute>
+                <CustomerRegisterPage />
+              </CustomerPublicRoute>
+            }
+          />
+          <Route
+            path="/customer/dashboard"
+            element={
+              <CustomerProtectedRoute>
+                <CustomerDashboardPage />
+              </CustomerProtectedRoute>
+            }
+          />
+
+          {/* Default Routes */}
+          <Route path="/" element={<Navigate to="/customer/login" replace />} />
           
           {/* 404 Route */}
           <Route
@@ -97,12 +161,20 @@ const App: React.FC = () => {
                 <div className="text-center">
                   <h1 className="text-4xl font-bold text-secondary-900 mb-4">404</h1>
                   <p className="text-secondary-600 mb-4">Page not found</p>
-                  <a
-                    href="/login"
-                    className="text-primary-600 hover:text-primary-700 underline"
-                  >
-                    Go back to login
-                  </a>
+                  <div className="space-x-4">
+                    <a
+                      href="/customer/login"
+                      className="text-blue-600 hover:text-blue-700 underline"
+                    >
+                      Customer Login
+                    </a>
+                    <a
+                      href="/login"
+                      className="text-primary-600 hover:text-primary-700 underline"
+                    >
+                      Seller Login
+                    </a>
+                  </div>
                 </div>
               </div>
             }

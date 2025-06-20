@@ -43,7 +43,7 @@ const Modal: React.FC<ModalProps> = ({
       {/* Modal */}
       <div
         className={cn(
-          'relative bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto',
+          'relative bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto',
           'transform transition-all duration-300 scale-100 opacity-100',
           'animate-slide-up'
         )}

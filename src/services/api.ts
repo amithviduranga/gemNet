@@ -2,10 +2,15 @@ import axios, { AxiosResponse } from 'axios';
 import {
   ApiResponse,
   UserRegistrationRequest,
+  CustomerRegistrationRequest,
+  GoogleSignInRequest,
   LoginRequest,
   AuthenticationResponse,
   FaceVerificationResult,
-  NicVerificationResult
+  NicVerificationResult,
+  Advertisement,
+  CreateAdvertisementRequest,
+  AdvertisementFilters
 } from '@/types';
 
 // API Configuration
@@ -154,6 +159,137 @@ export const authAPI = {
         }
       };
     }
+  },
+};
+
+// Customer API
+export const customerAPI = {
+  // Health check
+  healthCheck: async (): Promise<ApiResponse> => {
+    const response: AxiosResponse<ApiResponse> = await api.get('/api/customer/health');
+    return response.data;
+  },
+
+  // Register new customer
+  register: async (customerData: CustomerRegistrationRequest): Promise<ApiResponse<string>> => {
+    const response: AxiosResponse<ApiResponse<string>> = await api.post('/api/customer/register', customerData);
+    return response.data;
+  },
+
+  // Customer login
+  login: async (credentials: LoginRequest): Promise<ApiResponse<AuthenticationResponse>> => {
+    const response: AxiosResponse<ApiResponse<AuthenticationResponse>> = await api.post('/api/customer/login', credentials);
+    return response.data;
+  },
+
+  // Google Sign-In
+  googleSignIn: async (googleData: GoogleSignInRequest): Promise<ApiResponse<AuthenticationResponse>> => {
+    const response: AxiosResponse<ApiResponse<AuthenticationResponse>> = await api.post('/api/customer/google-signin', googleData);
+    return response.data;
+  },
+
+  // Get customer profile
+  getProfile: async (userId: string): Promise<ApiResponse<any>> => {
+    const response: AxiosResponse<ApiResponse<any>> = await api.get(`/api/customer/profile/${userId}`);
+    return response.data;
+  },
+};
+
+// Advertisement API
+export const advertisementAPI = {
+  // Get all advertisements for a seller
+  getSellerAdvertisements: async (sellerId: string, filters?: AdvertisementFilters): Promise<ApiResponse<Advertisement[]>> => {
+    const params = new URLSearchParams();
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.category) params.append('category', filters.category);
+    if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
+    if (filters?.dateTo) params.append('dateTo', filters.dateTo);
+    if (filters?.search) params.append('search', filters.search);
+
+    const response: AxiosResponse<ApiResponse<Advertisement[]>> = await api.get(
+      `/api/advertisements/seller/${sellerId}?${params.toString()}`
+    );
+    return response.data;
+  },
+
+  // Create new advertisement
+  createAdvertisement: async (advertisementData: CreateAdvertisementRequest): Promise<ApiResponse<string>> => {
+    const formData = new FormData();
+    formData.append('title', advertisementData.title);
+    formData.append('category', advertisementData.category);
+    formData.append('description', advertisementData.description);
+    formData.append('contactInfo', JSON.stringify(advertisementData.contactInfo));
+    
+    if (advertisementData.price) {
+      formData.append('price', advertisementData.price.toString());
+    }
+    if (advertisementData.currency) {
+      formData.append('currency', advertisementData.currency);
+    }
+
+    // Append images
+    advertisementData.images.forEach((image, index) => {
+      formData.append(`images`, image);
+    });
+
+    const response: AxiosResponse<ApiResponse<string>> = await api.post(
+      '/api/advertisements',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  },
+
+  // Get advertisement by ID
+  getAdvertisement: async (id: string): Promise<ApiResponse<Advertisement>> => {
+    const response: AxiosResponse<ApiResponse<Advertisement>> = await api.get(`/api/advertisements/${id}`);
+    return response.data;
+  },
+
+  // Update advertisement
+  updateAdvertisement: async (id: string, advertisementData: Partial<CreateAdvertisementRequest>): Promise<ApiResponse<Advertisement>> => {
+    const formData = new FormData();
+    
+    if (advertisementData.title) formData.append('title', advertisementData.title);
+    if (advertisementData.category) formData.append('category', advertisementData.category);
+    if (advertisementData.description) formData.append('description', advertisementData.description);
+    if (advertisementData.contactInfo) formData.append('contactInfo', JSON.stringify(advertisementData.contactInfo));
+    if (advertisementData.price) formData.append('price', advertisementData.price.toString());
+    if (advertisementData.currency) formData.append('currency', advertisementData.currency);
+
+    // Append new images if any
+    if (advertisementData.images && advertisementData.images.length > 0) {
+      advertisementData.images.forEach((image, index) => {
+        formData.append(`images`, image);
+      });
+    }
+
+    const response: AxiosResponse<ApiResponse<Advertisement>> = await api.put(
+      `/api/advertisements/${id}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  },
+
+  // Delete advertisement
+  deleteAdvertisement: async (id: string): Promise<ApiResponse<void>> => {
+    const response: AxiosResponse<ApiResponse<void>> = await api.delete(`/api/advertisements/${id}`);
+    return response.data;
+  },
+
+  // Submit advertisement for approval
+  submitForApproval: async (id: string): Promise<ApiResponse<Advertisement>> => {
+    const response: AxiosResponse<ApiResponse<Advertisement>> = await api.post(`/api/advertisements/${id}/submit`);
+    return response.data;
   },
 };
 

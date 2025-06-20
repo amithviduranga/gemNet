@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authAPI, apiUtils } from '@/services/api';
+import { authAPI, customerAPI, apiUtils } from '@/services/api';
 import {
   UserRegistrationRequest,
+  CustomerRegistrationRequest,
   LoginRequest,
   AuthenticationResponse,
   RegistrationProgress,
-  RegistrationStep
+  RegistrationStep,
+  UserRole
 } from '@/types';
 import { toast } from 'react-hot-toast';
 
@@ -80,6 +82,140 @@ export const useAuth = () => {
     user,
     loading,
     login,
+    logout,
+  };
+};
+
+// Customer Authentication Hook
+export const useCustomerAuth = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [user, setUser] = useState<AuthenticationResponse | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    const storedUser = localStorage.getItem('userData');
+
+    if (token && storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Error parsing stored user data:', error);
+        logout();
+      }
+    }
+    setLoading(false);
+  }, []);
+
+  const login = async (credentials: LoginRequest): Promise<boolean> => {
+    try {
+      setLoading(true);
+      const response = await customerAPI.login(credentials);
+      
+      if (response.success && response.data) {
+        const { token, ...userData } = response.data;
+        
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('userData', JSON.stringify(userData));
+        
+        setUser(userData);
+        setIsAuthenticated(true);
+        
+        toast.success('Login successful!');
+        return true;
+      } else {
+        toast.error(response.message || 'Login failed');
+        return false;
+      }
+    } catch (error) {
+      const errorMessage = apiUtils.formatErrorMessage(error);
+      toast.error(errorMessage);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (customerData: CustomerRegistrationRequest): Promise<boolean> => {
+    try {
+      setLoading(true);
+      const response = await customerAPI.register(customerData);
+      
+      if (response.success) {
+        toast.success('Account created successfully!');
+        return true;
+      } else {
+        toast.error(response.message || 'Registration failed');
+        return false;
+      }
+    } catch (error) {
+      const errorMessage = apiUtils.formatErrorMessage(error);
+      toast.error(errorMessage);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const googleSignIn = async (googleData: any): Promise<boolean> => {
+    try {
+      setLoading(true);
+      
+      const googleSignInData = {
+        email: googleData.email,
+        firstName: googleData.given_name,
+        lastName: googleData.family_name,
+        googleId: googleData.sub,
+        profilePicture: googleData.picture,
+      };
+
+      const response = await customerAPI.googleSignIn(googleSignInData);
+      
+      if (response.success && response.data) {
+        const { token, ...userData } = response.data;
+        
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('userData', JSON.stringify(userData));
+        
+        setUser(userData);
+        setIsAuthenticated(true);
+        
+        toast.success('Welcome!');
+        return true;
+      } else {
+        toast.error(response.message || 'Google Sign-In failed');
+        return false;
+      }
+    } catch (error) {
+      const errorMessage = apiUtils.formatErrorMessage(error);
+      toast.error(errorMessage);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    
+    setUser(null);
+    setIsAuthenticated(false);
+    
+    navigate('/customer/login');
+    toast.success('Logged out successfully');
+  };
+
+  return {
+    isAuthenticated,
+    user,
+    loading,
+    login,
+    register,
+    googleSignIn,
     logout,
   };
 };

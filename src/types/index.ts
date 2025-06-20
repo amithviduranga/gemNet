@@ -17,6 +17,39 @@ export interface UserRegistrationRequest {
   nicNumber: string;
 }
 
+// Customer Registration Types
+export interface CustomerRegistrationRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password?: string;
+  phoneNumber?: string;
+  address?: string;
+  dateOfBirth?: string;
+  googleId?: string;
+  profilePicture?: string;
+  isGoogleSignUp?: boolean;
+}
+
+// Google Sign-In Types
+export interface GoogleSignInRequest {
+  email: string;
+  firstName: string;
+  lastName: string;
+  googleId: string;
+  profilePicture?: string;
+}
+
+// Google Sign-In Response from Google API
+export interface GoogleSignInResponse {
+  email: string;
+  given_name: string;
+  family_name: string;
+  sub: string;
+  picture?: string;
+  name: string;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;
@@ -30,7 +63,143 @@ export interface AuthenticationResponse {
   lastName: string;
   isVerified: boolean;
   verificationStatus: string;
+  roles?: string[];
+  isGoogleUser?: boolean;
+  profilePicture?: string;
 }
+
+// User Roles
+export enum UserRole {
+  SELLER = 'SELLER',
+  CUSTOMER = 'CUSTOMER',
+  ADMIN = 'ADMIN'
+}
+
+// Advertisement Types
+export interface Advertisement {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  contactInfo: {
+    email: string;
+    phone: string;
+    address?: string;
+  };
+  images: string[];
+  price?: number;
+  currency?: string;
+  status: AdvertisementStatus;
+  sellerId: string;
+  sellerName: string;
+  createdAt: string;
+  updatedAt: string;
+  approvedAt?: string;
+  rejectedAt?: string;
+  rejectionReason?: string;
+}
+
+export enum AdvertisementStatus {
+  CREATED = 'CREATED',
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  SUSPENDED = 'SUSPENDED'
+}
+
+export interface CreateAdvertisementRequest {
+  title: string;
+  category: string;
+  description: string;
+  contactInfo: {
+    email: string;
+    phone: string;
+    address?: string;
+  };
+  images: File[];
+  price?: number;
+  currency?: string;
+}
+
+export interface AdvertisementFilters {
+  status?: AdvertisementStatus;
+  category?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+}
+
+
+
+// Advertisement Types
+export interface Advertisement {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  contactInfo: {
+    email: string;
+    phone: string;
+    address?: string;
+  };
+  images: string[];
+  price?: number;
+  currency?: string;
+  status: AdvertisementStatus;
+  sellerId: string;
+  sellerName: string;
+  createdAt: string;
+  updatedAt: string;
+  approvedAt?: string;
+  rejectedAt?: string;
+  rejectionReason?: string;
+}
+
+export enum AdvertisementStatus {
+  CREATED = 'CREATED',
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  SUSPENDED = 'SUSPENDED'
+}
+
+export interface CreateAdvertisementRequest {
+  title: string;
+  category: string;
+  description: string;
+  contactInfo: {
+    email: string;
+    phone: string;
+    address?: string;
+  };
+  images: File[];
+  price?: number;
+  currency?: string;
+}
+
+export interface AdvertisementFilters {
+  status?: AdvertisementStatus;
+  category?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+}
+
+// Advertisement Categories
+export const ADVERTISEMENT_CATEGORIES = [
+  'Electronics',
+  'Vehicles',
+  'Property',
+  'Jobs',
+  'Services',
+  'Fashion',
+  'Home & Garden',
+  'Sports',
+  'Books',
+  'Other'
+] as const;
+
+export type AdvertisementCategory = typeof ADVERTISEMENT_CATEGORIES[number];
 
 // Registration Steps
 export enum RegistrationStep {
